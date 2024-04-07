@@ -45,5 +45,51 @@ def most_expensive_baked_good():
     most_expensive_serialized = most_expensive.to_dict()
     return make_response( most_expensive_serialized,   200  )
 
+@app.route('/baked_goods', methods=['POST'])
+def create_baked_good():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        price = request.form.get('price')
+        new_baked_good = BakedGood(name=name, price=price)
+        db.session.add(new_baked_good)
+        db.session.commit()
+        return make_response(new_baked_good.to_dict(), 201)
+
+
+@app.route('/bakeries', methods=['GET', 'POST'])
+def create_bakeries():
+    if request.method == 'GET':
+        bakeries = [bakery.to_dict() for bakery in Bakery.query.all()]
+        return make_response(bakeries, 200)
+    elif request.method == 'POST':
+        name = request.form.get('name')
+        location = request.form.get('location')
+        new_bakery = Bakery(name=name, location=location)
+        db.session.add(new_bakery)
+        db.session.commit()
+        return make_response(new_bakery.to_dict(), 201)
+
+@app.route('/bakeries/<int:id>', methods=['PATCH'])
+def update_bakery(id):
+    bakery = Bakery.query.get(id)
+    if not bakery:
+        return make_response(jsonify({'error': 'Bakery not found'}), 404)
+    name = request.form.get('name')
+    if name:
+        bakery.name = name
+        db.session.commit()
+        return make_response(bakery.to_dict(), 200)
+    else:
+        return make_response(jsonify({'error': 'Name field is required'}), 400)
+
+@app.route('/baked_goods/<int:id>', methods=['DELETE'])
+def delete_baked_good(id):
+    baked_good = BakedGood.query.get(id)
+    if not baked_good:
+        return make_response(jsonify({'error': 'Baked good not found'}), 404)
+    db.session.delete(baked_good)
+    db.session.commit()
+    return make_response(jsonify({'message': 'Baked good deleted successfully'}), 200)
+
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
